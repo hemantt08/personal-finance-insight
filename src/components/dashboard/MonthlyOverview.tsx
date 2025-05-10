@@ -41,7 +41,7 @@ const MonthlyOverview: React.FC = () => {
           xAxisKey="name"
           colors={['#4ade80', '#f87171']}
           height={250}
-          valueFormatter={(value) => `$${value.toFixed(2)}`}
+          valueFormatter={(value) => `₹${value.toFixed(2)}`}
         />
         <div className="flex justify-center mt-4 space-x-6">
           <div className="flex items-center">

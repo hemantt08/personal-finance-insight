@@ -66,7 +66,7 @@ const RecentTransactions: React.FC = () => {
                 <div className={`font-medium ${
                   transaction.type === 'Income' ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  {transaction.type === 'Income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                  {transaction.type === 'Income' ? '+' : '-'}₹{transaction.amount.toFixed(2)}
                 </div>
               </div>
             ))}

@@ -77,10 +77,10 @@ const DebtsContent = () => {
       <Tabs defaultValue="liabilities">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="liabilities">
-            Money I Owe (${liabilitiesTotal.toFixed(2)})
+            Money I Owe (₹{liabilitiesTotal.toFixed(2)})
           </TabsTrigger>
           <TabsTrigger value="receivables">
-            Money Owed to Me (${receivablesTotal.toFixed(2)})
+            Money Owed to Me (₹{receivablesTotal.toFixed(2)})
           </TabsTrigger>
         </TabsList>
         
@@ -109,7 +109,7 @@ const DebtsContent = () => {
                         <div className="text-xs text-gray-400 mt-1">{formatDate(liability.date)}</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium">${liability.amount.toFixed(2)}</div>
+                        <div className="font-medium">₹{liability.amount.toFixed(2)}</div>
                         <Button 
                           variant={liability.isPaid ? "outline" : "default"} 
                           size="sm" 
@@ -152,7 +152,7 @@ const DebtsContent = () => {
                         <div className="text-xs text-gray-400 mt-1">{formatDate(receivable.date)}</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium">${receivable.amount.toFixed(2)}</div>
+                        <div className="font-medium">₹{receivable.amount.toFixed(2)}</div>
                         <Button 
                           variant={receivable.isPaid ? "outline" : "default"} 
                           size="sm" 

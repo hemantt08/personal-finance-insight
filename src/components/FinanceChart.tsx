@@ -42,7 +42,7 @@ const FinanceChart: React.FC<FinanceChartProps> = ({
   barKeys = [],
   colors = defaultColors,
   height = 300,
-  valueFormatter = (value) => `$${value}`,
+  valueFormatter = (value) => `₹${value}`,
 }) => {
   const renderChart = () => {
     switch (type) {

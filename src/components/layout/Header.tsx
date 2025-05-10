@@ -38,7 +38,7 @@ const Header: React.FC = () => {
           <div className="flex items-center space-x-4">
             <div className="hidden md:block">
               <div className="text-sm text-gray-600">Net Worth</div>
-              <div className="text-lg font-semibold">${netWorth.toFixed(2)}</div>
+              <div className="text-lg font-semibold">₹{netWorth.toFixed(2)}</div>
             </div>
             <Dialog>
               <DialogTrigger asChild>

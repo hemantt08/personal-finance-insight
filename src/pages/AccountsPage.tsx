@@ -41,7 +41,7 @@ const AccountsContent = () => {
     defaultValues: {
       name: "",
       balance: 0,
-      currency: "USD",
+      currency: "INR",
       color: "#60a5fa",
     },
   });
@@ -78,7 +78,7 @@ const AccountsContent = () => {
       <div className="flex justify-between items-center">
         <div>
           <p className="text-gray-500">Total Balance</p>
-          <h2 className="text-3xl font-bold">${calculateTotal().toFixed(2)}</h2>
+          <h2 className="text-3xl font-bold">₹{calculateTotal().toFixed(2)}</h2>
         </div>
         <Button onClick={() => setIsDialogOpen(true)}>
           <PlusIcon className="h-4 w-4 mr-2" /> Add Account
@@ -95,7 +95,7 @@ const AccountsContent = () => {
             <CardContent>
               <div className="flex justify-between items-center">
                 <div className="text-2xl font-bold">
-                  ${bank.balance.toFixed(2)}
+                  ₹{bank.balance.toFixed(2)}
                 </div>
                 <Button variant="outline" size="sm" onClick={() => handleEditBank(bank)}>
                   Edit
@@ -168,7 +168,7 @@ const AccountsContent = () => {
                   <FormItem>
                     <FormLabel>Currency</FormLabel>
                     <FormControl>
-                      <Input placeholder="USD" {...field} />
+                      <Input placeholder="INR" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

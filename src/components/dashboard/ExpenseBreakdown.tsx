@@ -60,7 +60,7 @@ const ExpenseBreakdown: React.FC = () => {
             type="pie"
             dataKey="value"
             height={250}
-            valueFormatter={(value) => `$${value.toFixed(2)}`}
+            valueFormatter={(value) => `₹${value.toFixed(2)}`}
           />
         )}
       </CardContent>

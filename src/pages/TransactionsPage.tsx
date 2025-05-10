@@ -139,7 +139,7 @@ const TransactionContent = () => {
                     transaction.type === "Expense" ? "text-red-600" : ""
                   }`}>
                     {transaction.type === "Income" ? "+" : transaction.type === "Expense" ? "-" : ""}
-                    ${transaction.amount.toFixed(2)}
+                    ₹{transaction.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>
                     <Button

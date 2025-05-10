@@ -13,15 +13,15 @@ const NetWorthCard: React.FC = () => {
         <CardTitle className="text-xl font-medium">Net Worth</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-bold">${netWorth.toFixed(2)}</div>
+        <div className="text-3xl font-bold">₹{netWorth.toFixed(2)}</div>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div>
             <p className="text-sm text-gray-500">Assets</p>
-            <p className="text-lg font-medium text-green-600">${assets.toFixed(2)}</p>
+            <p className="text-lg font-medium text-green-600">₹{assets.toFixed(2)}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Liabilities</p>
-            <p className="text-lg font-medium text-red-500">${liabilities.toFixed(2)}</p>
+            <p className="text-lg font-medium text-red-500">₹{liabilities.toFixed(2)}</p>
           </div>
         </div>
       </CardContent>

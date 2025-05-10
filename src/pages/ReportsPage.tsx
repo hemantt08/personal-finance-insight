@@ -80,17 +80,17 @@ const ReportsContent = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <DashboardCard
           title="Total Income"
-          value={`$${yearlyTotals.income.toFixed(2)}`}
+          value={`₹${yearlyTotals.income.toFixed(2)}`}
           valueClassName="text-green-600"
         />
         <DashboardCard
           title="Total Expenses"
-          value={`$${yearlyTotals.expense.toFixed(2)}`}
+          value={`₹${yearlyTotals.expense.toFixed(2)}`}
           valueClassName="text-red-600"
         />
         <DashboardCard
           title="Net Savings"
-          value={`$${yearlyTotals.balance.toFixed(2)}`}
+          value={`₹${yearlyTotals.balance.toFixed(2)}`}
           valueClassName={yearlyTotals.balance >= 0 ? "text-green-600" : "text-red-600"}
         />
       </div>
@@ -118,7 +118,7 @@ const ReportsContent = () => {
                 xAxisKey="name"
                 colors={['#4ade80', '#f87171']}
                 height={400}
-                valueFormatter={(value) => `$${value.toFixed(2)}`}
+                valueFormatter={(value) => `₹${value.toFixed(2)}`}
               />
               <div className="flex justify-center mt-4 space-x-6">
                 <div className="flex items-center">
@@ -153,7 +153,7 @@ const ReportsContent = () => {
                   type="pie"
                   dataKey="value"
                   height={400}
-                  valueFormatter={(value) => `$${value.toFixed(2)}`}
+                  valueFormatter={(value) => `₹${value.toFixed(2)}`}
                 />
               )}
             </CardContent>
@@ -179,7 +179,7 @@ const ReportsContent = () => {
                   type="pie"
                   dataKey="value"
                   height={400}
-                  valueFormatter={(value) => `$${value.toFixed(2)}`}
+                  valueFormatter={(value) => `₹${value.toFixed(2)}`}
                 />
               )}
             </CardContent>
