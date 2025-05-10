@@ -12,12 +12,13 @@ import {
   TransactionType,
   TransactionCategory
 } from "../types/finance";
+import { LedgerTransaction } from "../types/ledger";
 import { toast } from "@/components/ui/use-toast";
 
-// Sample data
+// Sample data - updated to use INR
 const initialBanks: Bank[] = [
-  { id: "1", name: "Main Bank", balance: 5000, currency: "USD", color: "#60a5fa" },
-  { id: "2", name: "Savings", balance: 10000, currency: "USD", color: "#34d399" },
+  { id: "1", name: "Main Bank", balance: 5000, currency: "INR", color: "#60a5fa" },
+  { id: "2", name: "Savings", balance: 10000, currency: "INR", color: "#34d399" },
 ];
 
 const initialPeople: Person[] = [
@@ -81,6 +82,9 @@ const initialInvestments: Investment[] = [
   },
 ];
 
+// New initial ledger transactions
+const initialLedgerTransactions: LedgerTransaction[] = [];
+
 // Define context type
 interface FinanceContextType {
   banks: Bank[];
@@ -89,16 +93,19 @@ interface FinanceContextType {
   receivables: Receivable[];
   liabilities: Liability[];
   investments: Investment[];
+  ledgerTransactions: LedgerTransaction[];
   addBank: (bank: Omit<Bank, "id">) => void;
   addTransaction: (transaction: Omit<Transaction, "id">) => void;
   addReceivable: (receivable: Omit<Receivable, "id">) => void;
   addLiability: (liability: Omit<Liability, "id">) => void;
   addInvestment: (investment: Omit<Investment, "id">) => void;
   addPerson: (person: Omit<Person, "id">) => void;
+  addLedgerTransaction: (transaction: Omit<LedgerTransaction, "id">) => void;
   toggleReceivablePaid: (id: string) => void;
   toggleLiabilityPaid: (id: string) => void;
   updateBank: (bank: Bank) => void;
   deleteTransaction: (id: string) => void;
+  getPersonBalance: (personId: string) => number;
   calculateNetWorth: () => NetWorthData;
   calculateMonthlyData: (month: string) => MonthlyData;
   getLiabilitySummary: () => { total: number, count: number };
@@ -106,6 +113,7 @@ interface FinanceContextType {
   getTransactionsByMonth: (month: string) => Transaction[];
   getMonthlyCategories: (month: string) => Record<TransactionCategory, number>;
   getRecentTransactions: (limit: number) => Transaction[];
+  resetData: () => void;
 }
 
 // Create context
@@ -143,6 +151,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return saved ? JSON.parse(saved) : initialInvestments;
   });
 
+  const [ledgerTransactions, setLedgerTransactions] = useState<LedgerTransaction[]>(() => {
+    const saved = localStorage.getItem("ledgerTransactions");
+    return saved ? JSON.parse(saved) : initialLedgerTransactions;
+  });
+
   // Save to localStorage whenever state changes
   useEffect(() => {
     localStorage.setItem("banks", JSON.stringify(banks));
@@ -168,8 +181,37 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem("investments", JSON.stringify(investments));
   }, [investments]);
 
+  useEffect(() => {
+    localStorage.setItem("ledgerTransactions", JSON.stringify(ledgerTransactions));
+  }, [ledgerTransactions]);
+
   // Helper functions
   const generateId = () => Math.random().toString(36).substring(2, 11);
+
+  // Reset all data
+  const resetData = () => {
+    setBanks([]);
+    setPeople([]);
+    setTransactions([]);
+    setReceivables([]);
+    setLiabilities([]);
+    setInvestments([]);
+    setLedgerTransactions([]);
+    
+    // Clear localStorage
+    localStorage.removeItem("banks");
+    localStorage.removeItem("people");
+    localStorage.removeItem("transactions");
+    localStorage.removeItem("receivables");
+    localStorage.removeItem("liabilities");
+    localStorage.removeItem("investments");
+    localStorage.removeItem("ledgerTransactions");
+    
+    toast({
+      title: "Data Reset",
+      description: "All financial data has been cleared.",
+    });
+  };
 
   // Context functions
   const addBank = (bank: Omit<Bank, "id">) => {
@@ -207,7 +249,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     
     toast({
       title: "Transaction Added",
-      description: `${transaction.type} of ${transaction.amount} has been recorded.`,
+      description: `${transaction.type} of ₹${transaction.amount} has been recorded.`,
     });
   };
 
@@ -240,7 +282,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setReceivables([...receivables, newReceivable]);
     toast({
       title: "Receivable Added",
-      description: `Amount of ${receivable.amount} to be received has been recorded.`,
+      description: `Amount of ₹${receivable.amount} to be received has been recorded.`,
     });
   };
 
@@ -257,7 +299,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setLiabilities([...liabilities, newLiability]);
     toast({
       title: "Liability Added",
-      description: `Amount of ${liability.amount} to be paid has been recorded.`,
+      description: `Amount of ₹${liability.amount} to be paid has been recorded.`,
     });
   };
 
@@ -285,6 +327,42 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       title: "Contact Added",
       description: `${person.name} has been added to your contacts.`,
     });
+  };
+
+  const addLedgerTransaction = (transaction: Omit<LedgerTransaction, "id">) => {
+    const newTransaction = { ...transaction, id: generateId() };
+    setLedgerTransactions([...ledgerTransactions, newTransaction]);
+    toast({
+      title: "Ledger Transaction Added",
+      description: `Transaction of ₹${transaction.amount} has been recorded.`,
+    });
+  };
+
+  // Calculate balance for a person based on ledger transactions
+  const getPersonBalance = (personId: string): number => {
+    let balance = 0;
+    
+    // Add money received (positive)
+    ledgerTransactions
+      .filter(t => t.toPersonId === personId)
+      .forEach(t => balance += t.amount);
+      
+    // Subtract money sent (negative)
+    ledgerTransactions
+      .filter(t => t.fromPersonId === personId)
+      .forEach(t => balance -= t.amount);
+      
+    // Add receivables where this person is the debtor
+    receivables
+      .filter(r => r.personId === personId && !r.isPaid)
+      .forEach(r => balance += r.amount);
+      
+    // Subtract liabilities where this person is the creditor
+    liabilities
+      .filter(l => l.personId === personId && !l.isPaid)
+      .forEach(l => balance -= l.amount);
+      
+    return balance;
   };
 
   const calculateNetWorth = (): NetWorthData => {
@@ -383,23 +461,27 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     receivables,
     liabilities,
     investments,
+    ledgerTransactions,
     addBank,
     addTransaction,
     addReceivable,
     addLiability,
     addInvestment,
     addPerson,
+    addLedgerTransaction,
     toggleReceivablePaid,
     toggleLiabilityPaid,
     updateBank,
     deleteTransaction,
+    getPersonBalance,
     calculateNetWorth,
     calculateMonthlyData,
     getLiabilitySummary,
     getReceivableSummary,
     getTransactionsByMonth,
     getMonthlyCategories,
-    getRecentTransactions
+    getRecentTransactions,
+    resetData
   };
 
   return (
