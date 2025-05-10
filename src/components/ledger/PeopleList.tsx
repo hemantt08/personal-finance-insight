@@ -4,7 +4,7 @@ import { useFinance } from "@/context/FinanceContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import DashboardCard from "@/components/DashboardCard";
-import { Indian } from "lucide-react";
+import { BadgeIndianRupee } from "lucide-react";
 
 const PeopleList = () => {
   const { people, getPersonBalance } = useFinance();
@@ -27,7 +27,7 @@ const PeopleList = () => {
         <DashboardCard
           title="Total People"
           value={people.length}
-          icon={<Indian />}
+          icon={<BadgeIndianRupee />}
         />
         <DashboardCard
           title="Total Owed to You"
