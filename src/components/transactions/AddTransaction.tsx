@@ -72,7 +72,18 @@ const AddTransaction: React.FC<AddTransactionProps> = ({ onSuccess }) => {
   });
 
   function onSubmit(values: FormValues) {
-    addTransaction(values);
+    // Explicitly create a transaction object with all required fields
+    const transaction = {
+      amount: values.amount,
+      type: values.type,
+      date: values.date,
+      bankId: values.bankId,
+      category: values.category,
+      description: values.description,
+      payerPayee: values.payerPayee,
+    };
+    
+    addTransaction(transaction);
     form.reset({
       ...form.getValues(),
       amount: 0,

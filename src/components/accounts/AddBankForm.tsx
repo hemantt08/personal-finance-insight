@@ -18,7 +18,7 @@ import { useFinance } from "@/context/FinanceContext";
 const formSchema = z.object({
   name: z.string().min(1, { message: "Bank name is required" }),
   balance: z.coerce.number().nonnegative({ message: "Balance must be a positive number" }),
-  currency: z.string().default("USD"),
+  currency: z.string().default("INR"),
   color: z.string().default("#60a5fa"),
 });
 
@@ -36,13 +36,21 @@ const AddBankForm: React.FC<AddBankFormProps> = ({ onSuccess }) => {
     defaultValues: {
       name: "",
       balance: 0,
-      currency: "USD",
+      currency: "INR",
       color: "#60a5fa",
     },
   });
 
   function onSubmit(values: FormValues) {
-    addBank(values);
+    // Explicitly type the values to match Omit<Bank, "id">
+    const bankData = {
+      name: values.name,
+      balance: values.balance,
+      currency: values.currency,
+      color: values.color,
+    };
+    
+    addBank(bankData);
     form.reset();
     if (onSuccess) onSuccess();
   }
@@ -83,7 +91,7 @@ const AddBankForm: React.FC<AddBankFormProps> = ({ onSuccess }) => {
             <FormItem>
               <FormLabel>Currency</FormLabel>
               <FormControl>
-                <Input placeholder="USD" {...field} />
+                <Input placeholder="INR" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -52,10 +52,19 @@ const AddDebtForm: React.FC = () => {
   });
 
   function onSubmit(values: DebtFormValues) {
+    // Create properly typed objects for liability and receivable
+    const debtData = {
+      personId: values.personId,
+      amount: values.amount,
+      description: values.description,
+      date: values.date,
+      isPaid: false
+    };
+
     if (activeTab === "iOwe") {
-      addLiability({ ...values, isPaid: false });
+      addLiability(debtData);
     } else {
-      addReceivable({ ...values, isPaid: false });
+      addReceivable(debtData);
     }
 
     form.reset({
