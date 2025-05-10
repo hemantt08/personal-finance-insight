@@ -1,14 +1,39 @@
-// Update this page (the content is just a fallback if you fail to update the page)
 
-const Index = () => {
+import React from "react";
+import Header from "@/components/layout/Header";
+import PageContainer from "@/components/layout/PageContainer";
+import { FinanceProvider } from "@/context/FinanceContext";
+import NetWorthCard from "@/components/dashboard/NetWorthCard";
+import AccountsOverview from "@/components/dashboard/AccountsOverview";
+import DebtSummary from "@/components/dashboard/DebtSummary";
+import RecentTransactions from "@/components/dashboard/RecentTransactions";
+import MonthlyOverview from "@/components/dashboard/MonthlyOverview";
+import ExpenseBreakdown from "@/components/dashboard/ExpenseBreakdown";
+
+const Dashboard = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <FinanceProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <PageContainer title="Dashboard" description="Your financial overview">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <NetWorthCard />
+            <AccountsOverview />
+            <DebtSummary />
+          </div>
+          
+          <div className="mt-6">
+            <RecentTransactions />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <MonthlyOverview />
+            <ExpenseBreakdown />
+          </div>
+        </PageContainer>
       </div>
-    </div>
+    </FinanceProvider>
   );
 };
 
-export default Index;
+export default Dashboard;
