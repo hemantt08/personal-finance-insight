@@ -1,118 +1,240 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { 
-  Bank, 
-  Transaction, 
-  Receivable, 
-  Liability, 
-  Investment, 
-  Person, 
+  Account,
+  AccountType,
+  Person,
+  Asset,
+  Transaction,
+  User,
+  CreditCardExtra,
+  TransactionMainType,
+  TransactionSubType,
+  TransactionCategory,
   NetWorthData,
   MonthlyData,
-  TransactionType,
-  TransactionCategory
+  AssetCategory
 } from "../types/finance";
-import { LedgerTransaction } from "../types/ledger";
 import { toast } from "@/components/ui/use-toast";
 
-// Sample data - updated to use INR
-const initialBanks: Bank[] = [
-  { id: "1", name: "Main Bank", balance: 5000, currency: "INR", color: "#60a5fa" },
-  { id: "2", name: "Savings", balance: 10000, currency: "INR", color: "#34d399" },
+// Sample user data
+const demoUser: User = {
+  id: "user1",
+  name: "Demo User",
+  email: "demo@example.com",
+  baseCurrency: "INR"
+};
+
+// Sample data for accounts
+const initialAccounts: Account[] = [
+  { 
+    id: "1", 
+    userId: "user1", 
+    name: "HDFC Bank", 
+    type: "Bank", 
+    balance: 50000, 
+    openingBalance: 50000, 
+    color: "#60a5fa" 
+  },
+  { 
+    id: "2", 
+    userId: "user1", 
+    name: "Wallet", 
+    type: "Wallet", 
+    balance: 2000, 
+    openingBalance: 2000, 
+    color: "#34d399" 
+  },
+  { 
+    id: "3", 
+    userId: "user1", 
+    name: "Cash", 
+    type: "Cash", 
+    balance: 5000, 
+    openingBalance: 5000, 
+    color: "#fbbf24" 
+  },
+  { 
+    id: "4", 
+    userId: "user1", 
+    name: "ICICI Credit Card", 
+    type: "Credit Card", 
+    balance: -15000, 
+    openingBalance: 0, 
+    color: "#f87171" 
+  }
 ];
 
+// Sample credit card data
+const initialCreditCardExtras: CreditCardExtra[] = [
+  {
+    accountId: "4",
+    creditLimit: 100000,
+    currentOutstanding: 15000
+  }
+];
+
+// Sample person data
 const initialPeople: Person[] = [
-  { id: "1", name: "John" },
-  { id: "2", name: "Sarah" },
-  { id: "3", name: "Credit Card Company" },
+  { id: "1", userId: "user1", name: "John", runningBalance: 1000 },
+  { id: "2", userId: "user1", name: "Sarah", runningBalance: -500 },
+  { id: "3", userId: "user1", name: "Credit Card Company", runningBalance: 0 }
 ];
 
-const initialTransactions: Transaction[] = [
+// Sample asset data
+const initialAssets: Asset[] = [
   {
     id: "1",
-    amount: 1500,
-    type: "Income",
-    date: "2023-05-01",
-    bankId: "1",
-    category: "Other",
-    description: "Salary",
-    payerPayee: "Employer"
+    userId: "user1",
+    name: "Mutual Fund Portfolio",
+    category: "Mutual Funds",
+    amountInvested: 30000,
+    currentValue: 32000
   },
   {
     id: "2",
-    amount: 50,
+    userId: "user1",
+    name: "Bitcoin",
+    category: "Cryptocurrency",
+    amountInvested: 10000,
+    currentValue: 12000
+  }
+];
+
+// Sample transaction data
+const initialTransactions: Transaction[] = [
+  {
+    id: "1",
+    userId: "user1",
+    amount: 25000,
+    type: "Income",
+    mainType: "Income",
+    subType: "",
+    date: "2023-05-01",
+    accountId: "1",
+    category: "Salary",
+    description: "Monthly Salary",
+    linkedPersonId: undefined,
+    linkedAssetId: undefined
+  },
+  {
+    id: "2",
+    userId: "user1",
+    amount: -5000,
     type: "Expense",
+    mainType: "Expense",
+    subType: "",
     date: "2023-05-05",
-    bankId: "1",
+    accountId: "1",
     category: "Food",
     description: "Groceries",
-    payerPayee: "Supermarket"
+    linkedPersonId: undefined,
+    linkedAssetId: undefined
   },
-];
-
-const initialReceivables: Receivable[] = [
   {
-    id: "1",
-    personId: "1",
-    amount: 100,
-    description: "Lunch",
+    id: "3",
+    userId: "user1",
+    amount: -2000,
+    type: "Transfer",
+    mainType: "Transfer",
+    subType: "Internal Transfer",
     date: "2023-05-10",
-    isPaid: false
+    accountId: "1",
+    category: "Other",
+    description: "Transfer to wallet",
+    linkedPersonId: undefined,
+    linkedAssetId: undefined
   },
-];
-
-const initialLiabilities: Liability[] = [
   {
-    id: "1",
-    personId: "3",
-    amount: 500,
-    description: "Credit Card",
-    date: "2023-05-15",
-    isPaid: false
-  },
-];
-
-const initialInvestments: Investment[] = [
-  {
-    id: "1",
-    name: "Stock Portfolio",
+    id: "4",
+    userId: "user1",
     amount: 2000,
-    currentValue: 2200,
-    category: "Stocks"
+    type: "Transfer",
+    mainType: "Transfer",
+    subType: "Internal Transfer",
+    date: "2023-05-10",
+    accountId: "2",
+    category: "Other",
+    description: "Transfer from bank",
+    linkedPersonId: undefined,
+    linkedAssetId: undefined
   },
+  {
+    id: "5",
+    userId: "user1",
+    amount: -1000,
+    type: "Transfer",
+    mainType: "Transfer",
+    subType: "Debt",
+    date: "2023-05-15",
+    accountId: "1",
+    category: "Other",
+    description: "Lent money to John",
+    linkedPersonId: "1",
+    linkedAssetId: undefined
+  },
+  {
+    id: "6",
+    userId: "user1",
+    amount: -15000,
+    type: "Expense",
+    mainType: "Expense",
+    subType: "",
+    date: "2023-05-20",
+    accountId: "4",
+    category: "Shopping",
+    description: "Purchase with credit card",
+    linkedPersonId: undefined,
+    linkedAssetId: undefined
+  }
 ];
 
-// New initial ledger transactions
-const initialLedgerTransactions: LedgerTransaction[] = [];
+// Define custom categories
+const defaultCategories: TransactionCategory[] = [
+  "Food",
+  "Transportation",
+  "Utilities",
+  "Entertainment",
+  "Travel",
+  "Shopping",
+  "Health",
+  "Education",
+  "Gift",
+  "Investment",
+  "Salary",
+  "Business",
+  "Interest",
+  "Rent",
+  "Other"
+];
 
 // Define context type
 interface FinanceContextType {
-  banks: Bank[];
+  user: User | null;
+  accounts: Account[];
   people: Person[];
+  assets: Asset[];
   transactions: Transaction[];
-  receivables: Receivable[];
-  liabilities: Liability[];
-  investments: Investment[];
-  ledgerTransactions: LedgerTransaction[];
-  addBank: (bank: Omit<Bank, "id">) => void;
-  addTransaction: (transaction: Omit<Transaction, "id">) => void;
-  addReceivable: (receivable: Omit<Receivable, "id">) => void;
-  addLiability: (liability: Omit<Liability, "id">) => void;
-  addInvestment: (investment: Omit<Investment, "id">) => void;
-  addPerson: (person: Omit<Person, "id">) => void;
-  addLedgerTransaction: (transaction: Omit<LedgerTransaction, "id">) => void;
-  toggleReceivablePaid: (id: string) => void;
-  toggleLiabilityPaid: (id: string) => void;
-  updateBank: (bank: Bank) => void;
+  creditCardExtras: CreditCardExtra[];
+  customCategories: TransactionCategory[];
+  addAccount: (account: Omit<Account, "id" | "userId" | "balance">, creditCardInfo?: { creditLimit: number, currentOutstanding: number }) => void;
+  addTransaction: (transaction: Omit<Transaction, "id" | "userId">) => void;
+  addPerson: (person: Omit<Person, "id" | "userId" | "runningBalance">) => void;
+  addAsset: (asset: Omit<Asset, "id" | "userId">) => void;
+  updateAccount: (account: Account) => void;
+  updatePerson: (person: Person) => void;
   deleteTransaction: (id: string) => void;
   getPersonBalance: (personId: string) => number;
   calculateNetWorth: () => NetWorthData;
   calculateMonthlyData: (month: string) => MonthlyData;
-  getLiabilitySummary: () => { total: number, count: number };
   getReceivableSummary: () => { total: number, count: number };
+  getPayableSummary: () => { total: number, count: number };
   getTransactionsByMonth: (month: string) => Transaction[];
   getMonthlyCategories: (month: string) => Record<TransactionCategory, number>;
   getRecentTransactions: (limit: number) => Transaction[];
+  getCreditCardInfo: (accountId: string) => CreditCardExtra | undefined;
+  addCustomCategory: (category: TransactionCategory) => void;
+  removeCustomCategory: (category: TransactionCategory) => void;
   resetData: () => void;
 }
 
@@ -121,9 +243,19 @@ export const FinanceContext = createContext<FinanceContextType | undefined>(unde
 
 // Provider component
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [banks, setBanks] = useState<Bank[]>(() => {
-    const saved = localStorage.getItem("banks");
-    return saved ? JSON.parse(saved) : initialBanks;
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem("user");
+    return saved ? JSON.parse(saved) : demoUser;
+  });
+  
+  const [accounts, setAccounts] = useState<Account[]>(() => {
+    const saved = localStorage.getItem("accounts");
+    return saved ? JSON.parse(saved) : initialAccounts;
+  });
+  
+  const [creditCardExtras, setCreditCardExtras] = useState<CreditCardExtra[]>(() => {
+    const saved = localStorage.getItem("creditCardExtras");
+    return saved ? JSON.parse(saved) : initialCreditCardExtras;
   });
   
   const [people, setPeople] = useState<Person[]>(() => {
@@ -131,81 +263,154 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return saved ? JSON.parse(saved) : initialPeople;
   });
   
+  const [assets, setAssets] = useState<Asset[]>(() => {
+    const saved = localStorage.getItem("assets");
+    return saved ? JSON.parse(saved) : initialAssets;
+  });
+  
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     const saved = localStorage.getItem("transactions");
     return saved ? JSON.parse(saved) : initialTransactions;
   });
   
-  const [receivables, setReceivables] = useState<Receivable[]>(() => {
-    const saved = localStorage.getItem("receivables");
-    return saved ? JSON.parse(saved) : initialReceivables;
-  });
-  
-  const [liabilities, setLiabilities] = useState<Liability[]>(() => {
-    const saved = localStorage.getItem("liabilities");
-    return saved ? JSON.parse(saved) : initialLiabilities;
-  });
-  
-  const [investments, setInvestments] = useState<Investment[]>(() => {
-    const saved = localStorage.getItem("investments");
-    return saved ? JSON.parse(saved) : initialInvestments;
-  });
-
-  const [ledgerTransactions, setLedgerTransactions] = useState<LedgerTransaction[]>(() => {
-    const saved = localStorage.getItem("ledgerTransactions");
-    return saved ? JSON.parse(saved) : initialLedgerTransactions;
+  const [customCategories, setCustomCategories] = useState<TransactionCategory[]>(() => {
+    const saved = localStorage.getItem("customCategories");
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Save to localStorage whenever state changes
   useEffect(() => {
-    localStorage.setItem("banks", JSON.stringify(banks));
-  }, [banks]);
+    if (user) localStorage.setItem("user", JSON.stringify(user));
+  }, [user]);
+  
+  useEffect(() => {
+    localStorage.setItem("accounts", JSON.stringify(accounts));
+  }, [accounts]);
+  
+  useEffect(() => {
+    localStorage.setItem("creditCardExtras", JSON.stringify(creditCardExtras));
+  }, [creditCardExtras]);
   
   useEffect(() => {
     localStorage.setItem("people", JSON.stringify(people));
   }, [people]);
   
   useEffect(() => {
+    localStorage.setItem("assets", JSON.stringify(assets));
+  }, [assets]);
+  
+  useEffect(() => {
     localStorage.setItem("transactions", JSON.stringify(transactions));
   }, [transactions]);
   
   useEffect(() => {
-    localStorage.setItem("receivables", JSON.stringify(receivables));
-  }, [receivables]);
-  
-  useEffect(() => {
-    localStorage.setItem("liabilities", JSON.stringify(liabilities));
-  }, [liabilities]);
-  
-  useEffect(() => {
-    localStorage.setItem("investments", JSON.stringify(investments));
-  }, [investments]);
-
-  useEffect(() => {
-    localStorage.setItem("ledgerTransactions", JSON.stringify(ledgerTransactions));
-  }, [ledgerTransactions]);
+    localStorage.setItem("customCategories", JSON.stringify(customCategories));
+  }, [customCategories]);
 
   // Helper functions
   const generateId = () => Math.random().toString(36).substring(2, 11);
 
+  // Data integrity engine functions
+  const recalcAccount = (accountId: string) => {
+    const account = accounts.find(a => a.id === accountId);
+    if (!account) return;
+    
+    // Start with opening balance
+    let balance = account.openingBalance;
+    
+    // Add all transactions for this account
+    transactions.forEach(t => {
+      if (t.accountId === accountId) {
+        balance += t.amount;
+      }
+    });
+    
+    // Update account
+    const updatedAccount = { ...account, balance };
+    setAccounts(prev => prev.map(a => a.id === accountId ? updatedAccount : a));
+    
+    // Update credit card info if applicable
+    if (account.type === "Credit Card") {
+      recalcCreditCardOutstanding(accountId);
+    }
+  };
+  
+  const recalcPerson = (personId: string) => {
+    const person = people.find(p => p.id === personId);
+    if (!person) return;
+    
+    // Calculate running balance
+    let runningBalance = 0;
+    
+    transactions.forEach(t => {
+      if (t.linkedPersonId === personId) {
+        if (t.mainType === "Transfer" && t.subType === "Debt") {
+          runningBalance += t.amount > 0 ? -t.amount : Math.abs(t.amount); // Negative for "I owe", positive for "Owes me"
+        } else if (t.mainType === "Transfer" && t.subType === "Repayment") {
+          runningBalance += t.amount; // Opposite direction of debt
+        }
+      }
+    });
+    
+    // Update person
+    const updatedPerson = { ...person, runningBalance };
+    setPeople(prev => prev.map(p => p.id === personId ? updatedPerson : p));
+  };
+  
+  const recalcCreditCardOutstanding = (accountId: string) => {
+    const ccExtra = creditCardExtras.find(cc => cc.accountId === accountId);
+    if (!ccExtra) return;
+    
+    // Calculate outstanding amount from transactions
+    let outstanding = 0;
+    
+    transactions.forEach(t => {
+      if (t.accountId === accountId) {
+        if (t.mainType === "Expense") {
+          outstanding += Math.abs(t.amount);
+        } else if (t.mainType === "Credit Card Payment" || (t.mainType === "Transfer" && t.subType === "Internal Transfer")) {
+          outstanding -= t.amount > 0 ? t.amount : 0; // Only consider positive amounts (payments)
+        }
+      }
+    });
+    
+    // Ensure outstanding is not below zero
+    outstanding = Math.max(0, outstanding);
+    
+    // Update credit card extra
+    const updatedCcExtra = { ...ccExtra, currentOutstanding: outstanding };
+    setCreditCardExtras(prev => prev.map(cc => cc.accountId === accountId ? updatedCcExtra : cc));
+  };
+  
+  const recalcAllBalances = () => {
+    // Recalculate all account balances
+    accounts.forEach(account => {
+      recalcAccount(account.id);
+    });
+    
+    // Recalculate all person balances
+    people.forEach(person => {
+      recalcPerson(person.id);
+    });
+  };
+  
   // Reset all data
   const resetData = () => {
-    setBanks([]);
+    setUser(demoUser);
+    setAccounts([]);
     setPeople([]);
+    setAssets([]);
     setTransactions([]);
-    setReceivables([]);
-    setLiabilities([]);
-    setInvestments([]);
-    setLedgerTransactions([]);
+    setCreditCardExtras([]);
+    setCustomCategories([]);
     
     // Clear localStorage
-    localStorage.removeItem("banks");
+    localStorage.removeItem("accounts");
     localStorage.removeItem("people");
+    localStorage.removeItem("assets");
     localStorage.removeItem("transactions");
-    localStorage.removeItem("receivables");
-    localStorage.removeItem("liabilities");
-    localStorage.removeItem("investments");
-    localStorage.removeItem("ledgerTransactions");
+    localStorage.removeItem("creditCardExtras");
+    localStorage.removeItem("customCategories");
     
     toast({
       title: "Data Reset",
@@ -214,189 +419,281 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Context functions
-  const addBank = (bank: Omit<Bank, "id">) => {
-    const newBank = { ...bank, id: generateId() };
-    setBanks([...banks, newBank]);
-    toast({
-      title: "Bank Added",
-      description: `${bank.name} has been added to your accounts.`,
-    });
-  };
-
-  const updateBank = (bank: Bank) => {
-    setBanks(banks.map(b => b.id === bank.id ? bank : b));
-    toast({
-      title: "Bank Updated",
-      description: `${bank.name} has been updated.`,
-    });
-  };
-
-  const addTransaction = (transaction: Omit<Transaction, "id">) => {
-    const newTransaction = { ...transaction, id: generateId() };
-    setTransactions([...transactions, newTransaction]);
+  const addAccount = (
+    accountData: Omit<Account, "id" | "userId" | "balance">, 
+    creditCardInfo?: { creditLimit: number, currentOutstanding: number }
+  ) => {
+    if (!user) return;
     
-    // Update bank balance
-    const bank = banks.find(b => b.id === transaction.bankId);
-    if (bank) {
-      const updatedBank = { ...bank };
-      if (transaction.type === "Income") {
-        updatedBank.balance += transaction.amount;
-      } else if (transaction.type === "Expense") {
-        updatedBank.balance -= transaction.amount;
+    const newAccount: Account = { 
+      ...accountData, 
+      id: generateId(), 
+      userId: user.id, 
+      balance: accountData.openingBalance 
+    };
+    
+    setAccounts(prev => [...prev, newAccount]);
+    
+    // If this is a credit card, add the credit card extra info
+    if (accountData.type === "Credit Card" && creditCardInfo) {
+      const newCcExtra: CreditCardExtra = {
+        accountId: newAccount.id,
+        creditLimit: creditCardInfo.creditLimit,
+        currentOutstanding: creditCardInfo.currentOutstanding
+      };
+      
+      setCreditCardExtras(prev => [...prev, newCcExtra]);
+      
+      // If there's an outstanding amount, create a transaction for it
+      if (creditCardInfo.currentOutstanding > 0) {
+        const newTransaction: Transaction = {
+          id: generateId(),
+          userId: user.id,
+          date: new Date().toISOString().split('T')[0],
+          amount: -creditCardInfo.currentOutstanding,
+          accountId: newAccount.id,
+          category: "Other",
+          description: "Initial credit card balance",
+          mainType: "Expense",
+          subType: "",
+        };
+        
+        setTransactions(prev => [...prev, newTransaction]);
       }
-      updateBank(updatedBank);
+    }
+    
+    toast({
+      title: "Account Added",
+      description: `${accountData.name} has been added to your accounts.`,
+    });
+  };
+
+  const updateAccount = (account: Account) => {
+    setAccounts(accounts.map(a => a.id === account.id ? account : a));
+    toast({
+      title: "Account Updated",
+      description: `${account.name} has been updated.`,
+    });
+  };
+  
+  const updatePerson = (person: Person) => {
+    setPeople(people.map(p => p.id === person.id ? person : p));
+    toast({
+      title: "Person Updated",
+      description: `${person.name} has been updated.`,
+    });
+  };
+
+  const addTransaction = (transactionData: Omit<Transaction, "id" | "userId">) => {
+    if (!user) return;
+    
+    const newTransaction: Transaction = { 
+      ...transactionData, 
+      id: generateId(), 
+      userId: user.id 
+    };
+    
+    setTransactions(prev => [...prev, newTransaction]);
+    
+    // Update balances based on transaction type
+    const sourceAccount = accounts.find(a => a.id === transactionData.accountId);
+    if (!sourceAccount) return;
+    
+    // Handle different transaction types
+    if (transactionData.mainType === "Income" || transactionData.mainType === "Expense") {
+      // Simple account balance update
+      recalcAccount(transactionData.accountId);
+    } 
+    else if (transactionData.mainType === "Transfer") {
+      if (transactionData.subType === "Internal Transfer" && transactionData.linkedPersonId) {
+        // This is an internal transfer between accounts
+        // Add the opposite transaction to the target account
+        const targetTransaction: Transaction = {
+          id: generateId(),
+          userId: user.id,
+          date: transactionData.date,
+          amount: -transactionData.amount, // Opposite amount
+          accountId: transactionData.linkedPersonId, // Using linkedPersonId to store target account for now
+          category: transactionData.category,
+          description: transactionData.description,
+          mainType: "Transfer",
+          subType: "Internal Transfer",
+          linkedPersonId: transactionData.accountId, // Link back to source
+        };
+        
+        setTransactions(prev => [...prev, targetTransaction]);
+        
+        // Recalculate both accounts
+        recalcAccount(transactionData.accountId);
+        recalcAccount(transactionData.linkedPersonId);
+      } 
+      else if (transactionData.subType === "Debt" && transactionData.linkedPersonId) {
+        // Update person balance
+        recalcAccount(transactionData.accountId);
+        recalcPerson(transactionData.linkedPersonId);
+      } 
+      else if (transactionData.subType === "Repayment" && transactionData.linkedPersonId) {
+        // Update person balance
+        recalcAccount(transactionData.accountId);
+        recalcPerson(transactionData.linkedPersonId);
+      }
+    } 
+    else if (transactionData.mainType === "Credit Card Payment") {
+      // Source account (bank) decreases
+      // Target account (credit card) decreases liability
+      if (transactionData.linkedPersonId) {
+        recalcAccount(transactionData.accountId); // Bank
+        recalcAccount(transactionData.linkedPersonId); // Credit Card
+      }
     }
     
     toast({
       title: "Transaction Added",
-      description: `${transaction.type} of ₹${transaction.amount} has been recorded.`,
+      description: `${transactionData.mainType} of ₹${Math.abs(transactionData.amount).toLocaleString('en-IN')} has been recorded.`,
     });
   };
 
   const deleteTransaction = (id: string) => {
     const transaction = transactions.find(t => t.id === id);
-    if (transaction) {
-      // Revert bank balance changes
-      const bank = banks.find(b => b.id === transaction.bankId);
-      if (bank) {
-        const updatedBank = { ...bank };
-        if (transaction.type === "Income") {
-          updatedBank.balance -= transaction.amount;
-        } else if (transaction.type === "Expense") {
-          updatedBank.balance += transaction.amount;
-        }
-        updateBank(updatedBank);
-      }
-      
-      setTransactions(transactions.filter(t => t.id !== id));
-      
-      toast({
-        title: "Transaction Deleted",
-        description: `Transaction has been removed.`,
-      });
-    }
-  };
-
-  const addReceivable = (receivable: Omit<Receivable, "id">) => {
-    const newReceivable = { ...receivable, id: generateId() };
-    setReceivables([...receivables, newReceivable]);
-    toast({
-      title: "Receivable Added",
-      description: `Amount of ₹${receivable.amount} to be received has been recorded.`,
-    });
-  };
-
-  const toggleReceivablePaid = (id: string) => {
-    setReceivables(
-      receivables.map(r => 
-        r.id === id ? { ...r, isPaid: !r.isPaid } : r
-      )
-    );
-  };
-
-  const addLiability = (liability: Omit<Liability, "id">) => {
-    const newLiability = { ...liability, id: generateId() };
-    setLiabilities([...liabilities, newLiability]);
-    toast({
-      title: "Liability Added",
-      description: `Amount of ₹${liability.amount} to be paid has been recorded.`,
-    });
-  };
-
-  const toggleLiabilityPaid = (id: string) => {
-    setLiabilities(
-      liabilities.map(l => 
-        l.id === id ? { ...l, isPaid: !l.isPaid } : l
-      )
-    );
-  };
-
-  const addInvestment = (investment: Omit<Investment, "id">) => {
-    const newInvestment = { ...investment, id: generateId() };
-    setInvestments([...investments, newInvestment]);
-    toast({
-      title: "Investment Added",
-      description: `${investment.name} investment has been recorded.`,
-    });
-  };
-
-  const addPerson = (person: Omit<Person, "id">) => {
-    const newPerson = { ...person, id: generateId() };
-    setPeople([...people, newPerson]);
-    toast({
-      title: "Contact Added",
-      description: `${person.name} has been added to your contacts.`,
-    });
-  };
-
-  const addLedgerTransaction = (transaction: Omit<LedgerTransaction, "id">) => {
-    const newTransaction = { ...transaction, id: generateId() };
-    setLedgerTransactions([...ledgerTransactions, newTransaction]);
-    toast({
-      title: "Ledger Transaction Added",
-      description: `Transaction of ₹${transaction.amount} has been recorded.`,
-    });
-  };
-
-  // Calculate balance for a person based on ledger transactions
-  const getPersonBalance = (personId: string): number => {
-    let balance = 0;
+    if (!transaction) return;
     
-    // Add money received (positive)
-    ledgerTransactions
-      .filter(t => t.toPersonId === personId)
-      .forEach(t => balance += t.amount);
+    // Check for paired transactions (like internal transfers)
+    let pairedTransactionId: string | undefined;
+    
+    if (transaction.mainType === "Transfer" && transaction.subType === "Internal Transfer") {
+      const pairedTransaction = transactions.find(t => 
+        t.mainType === "Transfer" && 
+        t.subType === "Internal Transfer" &&
+        t.linkedPersonId === transaction.accountId &&
+        t.accountId === transaction.linkedPersonId &&
+        t.date === transaction.date
+      );
       
-    // Subtract money sent (negative)
-    ledgerTransactions
-      .filter(t => t.fromPersonId === personId)
-      .forEach(t => balance -= t.amount);
-      
-    // Add receivables where this person is the debtor
-    receivables
-      .filter(r => r.personId === personId && !r.isPaid)
-      .forEach(r => balance += r.amount);
-      
-    // Subtract liabilities where this person is the creditor
-    liabilities
-      .filter(l => l.personId === personId && !l.isPaid)
-      .forEach(l => balance -= l.amount);
-      
-    return balance;
+      if (pairedTransaction) {
+        pairedTransactionId = pairedTransaction.id;
+      }
+    }
+    
+    // Remove the transaction(s)
+    setTransactions(transactions.filter(t => t.id !== id && t.id !== pairedTransactionId));
+    
+    // Recalculate affected balances
+    recalcAccount(transaction.accountId);
+    
+    if (transaction.linkedPersonId) {
+      // Check if it's a person or an account
+      if (transaction.mainType === "Transfer" && transaction.subType === "Internal Transfer") {
+        recalcAccount(transaction.linkedPersonId);
+      } else {
+        recalcPerson(transaction.linkedPersonId);
+      }
+    }
+    
+    if (transaction.linkedAssetId) {
+      // TODO: Handle asset recalculation if needed
+    }
+    
+    toast({
+      title: "Transaction Deleted",
+      description: `Transaction has been removed.`,
+    });
+  };
+
+  const addPerson = (personData: Omit<Person, "id" | "userId" | "runningBalance">) => {
+    if (!user) return;
+    
+    const newPerson: Person = { 
+      ...personData, 
+      id: generateId(), 
+      userId: user.id, 
+      runningBalance: 0 
+    };
+    
+    setPeople([...people, newPerson]);
+    
+    toast({
+      title: "Person Added",
+      description: `${personData.name} has been added to your contacts.`,
+    });
+  };
+
+  const addAsset = (assetData: Omit<Asset, "id" | "userId">) => {
+    if (!user) return;
+    
+    const newAsset: Asset = { 
+      ...assetData, 
+      id: generateId(), 
+      userId: user.id 
+    };
+    
+    setAssets([...assets, newAsset]);
+    
+    toast({
+      title: "Asset Added",
+      description: `${assetData.name} has been added to your investments.`,
+    });
+  };
+
+  // Calculate balance for a person
+  const getPersonBalance = (personId: string): number => {
+    const person = people.find(p => p.id === personId);
+    return person ? person.runningBalance : 0;
   };
 
   const calculateNetWorth = (): NetWorthData => {
-    const bankTotal = banks.reduce((sum, bank) => sum + bank.balance, 0);
-    const investmentTotal = investments.reduce((sum, inv) => sum + inv.currentValue, 0);
-    const receivableTotal = receivables
-      .filter(r => !r.isPaid)
-      .reduce((sum, r) => sum + r.amount, 0);
+    // Bank accounts, wallet, cash are assets
+    const cashAssets = accounts
+      .filter(a => a.type !== "Credit Card")
+      .reduce((sum, account) => sum + account.balance, 0);
     
-    const liabilityTotal = liabilities
-      .filter(l => !l.isPaid)
-      .reduce((sum, l) => sum + l.amount, 0);
+    // Investment assets
+    const investmentValue = assets.reduce((sum, asset) => sum + (asset.currentValue || asset.amountInvested), 0);
     
-    const assets = bankTotal + investmentTotal + receivableTotal;
+    // Credit card liabilities
+    const creditCardLiabilities = accounts
+      .filter(a => a.type === "Credit Card")
+      .reduce((sum, account) => sum + Math.abs(Math.min(0, account.balance)), 0);
+    
+    // Additional liabilities from credit card extras
+    const additionalCcLiabilities = creditCardExtras.reduce((sum, cc) => {
+      return sum + cc.currentOutstanding;
+    }, 0);
+    
+    // Receivables (positive person balances)
+    const receivables = people.reduce((sum, person) => {
+      return sum + (person.runningBalance > 0 ? person.runningBalance : 0);
+    }, 0);
+    
+    // Payables (negative person balances)
+    const payables = people.reduce((sum, person) => {
+      return sum + (person.runningBalance < 0 ? Math.abs(person.runningBalance) : 0);
+    }, 0);
+    
+    const totalAssets = cashAssets + investmentValue + receivables;
+    const totalLiabilities = creditCardLiabilities + additionalCcLiabilities + payables;
+    
     return { 
-      assets, 
-      liabilities: liabilityTotal, 
-      netWorth: assets - liabilityTotal 
-    };
-  };
-
-  const getLiabilitySummary = () => {
-    const unpaidLiabilities = liabilities.filter(l => !l.isPaid);
-    return {
-      total: unpaidLiabilities.reduce((sum, l) => sum + l.amount, 0),
-      count: unpaidLiabilities.length
+      assets: totalAssets, 
+      liabilities: totalLiabilities, 
+      netWorth: totalAssets - totalLiabilities,
+      receivables,
+      payables
     };
   };
 
   const getReceivableSummary = () => {
-    const unpaidReceivables = receivables.filter(r => !r.isPaid);
+    const receivablePeople = people.filter(p => p.runningBalance > 0);
     return {
-      total: unpaidReceivables.reduce((sum, r) => sum + r.amount, 0),
-      count: unpaidReceivables.length
+      total: receivablePeople.reduce((sum, p) => sum + p.runningBalance, 0),
+      count: receivablePeople.length
+    };
+  };
+
+  const getPayableSummary = () => {
+    const payablePeople = people.filter(p => p.runningBalance < 0);
+    return {
+      total: payablePeople.reduce((sum, p) => sum + Math.abs(p.runningBalance), 0),
+      count: payablePeople.length
     };
   };
 
@@ -408,12 +705,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const monthTransactions = getTransactionsByMonth(month);
     
     const income = monthTransactions
-      .filter(t => t.type === "Income")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter(t => t.mainType === "Income")
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
     const expense = monthTransactions
-      .filter(t => t.type === "Expense")
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter(t => t.mainType === "Expense")
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
     
     return {
       income,
@@ -424,25 +721,18 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const getMonthlyCategories = (month: string): Record<TransactionCategory, number> => {
     const monthTransactions = getTransactionsByMonth(month);
-    const expenseTransactions = monthTransactions.filter(t => t.type === "Expense");
+    const expenseTransactions = monthTransactions.filter(t => t.mainType === "Expense");
     
-    const categories: Record<TransactionCategory, number> = {
-      Personal: 0,
-      Food: 0,
-      Transportation: 0,
-      Utilities: 0,
-      Entertainment: 0,
-      Travel: 0,
-      Shopping: 0,
-      Health: 0,
-      Education: 0,
-      Gift: 0,
-      Investment: 0,
-      Other: 0
-    };
+    const categories = {} as Record<TransactionCategory, number>;
     
+    // Initialize all categories to 0
+    [...defaultCategories, ...customCategories].forEach(cat => {
+      categories[cat] = 0;
+    });
+    
+    // Add up expenses by category
     expenseTransactions.forEach(t => {
-      categories[t.category] += t.amount;
+      categories[t.category] = (categories[t.category] || 0) + Math.abs(t.amount);
     });
     
     return categories;
@@ -454,33 +744,84 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .slice(0, limit);
   };
 
+  const getCreditCardInfo = (accountId: string): CreditCardExtra | undefined => {
+    return creditCardExtras.find(cc => cc.accountId === accountId);
+  };
+
+  const addCustomCategory = (category: TransactionCategory) => {
+    if (defaultCategories.includes(category) || customCategories.includes(category)) {
+      toast({
+        title: "Category Exists",
+        description: `The category ${category} already exists.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setCustomCategories(prev => [...prev, category]);
+    
+    toast({
+      title: "Category Added",
+      description: `${category} has been added to your custom categories.`,
+    });
+  };
+
+  const removeCustomCategory = (category: TransactionCategory) => {
+    // Check if category is in use
+    const isCategoryInUse = transactions.some(t => t.category === category);
+    
+    if (isCategoryInUse) {
+      toast({
+        title: "Cannot Remove Category",
+        description: `The category ${category} is in use by transactions and cannot be removed.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (defaultCategories.includes(category)) {
+      toast({
+        title: "Cannot Remove Default Category",
+        description: `The category ${category} is a default category and cannot be removed.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setCustomCategories(prev => prev.filter(c => c !== category));
+    
+    toast({
+      title: "Category Removed",
+      description: `${category} has been removed from your custom categories.`,
+    });
+  };
+
   const value = {
-    banks,
+    user,
+    accounts,
     people,
+    assets,
     transactions,
-    receivables,
-    liabilities,
-    investments,
-    ledgerTransactions,
-    addBank,
+    creditCardExtras,
+    customCategories,
+    addAccount,
     addTransaction,
-    addReceivable,
-    addLiability,
-    addInvestment,
     addPerson,
-    addLedgerTransaction,
-    toggleReceivablePaid,
-    toggleLiabilityPaid,
-    updateBank,
+    addAsset,
+    updateAccount,
+    updatePerson,
     deleteTransaction,
     getPersonBalance,
     calculateNetWorth,
     calculateMonthlyData,
-    getLiabilitySummary,
     getReceivableSummary,
+    getPayableSummary,
     getTransactionsByMonth,
     getMonthlyCategories,
     getRecentTransactions,
+    getCreditCardInfo,
+    addCustomCategory,
+    removeCustomCategory,
     resetData
   };
 

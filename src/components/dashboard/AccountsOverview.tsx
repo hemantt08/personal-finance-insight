@@ -6,10 +6,73 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 import AddBankForm from "../accounts/AddBankForm";
+import AccountTypeTag from "../accounts/AccountTypeTag";
+import { AccountType } from "@/types/finance";
 
 const AccountsOverview: React.FC = () => {
-  const { banks } = useFinance();
+  const { accounts, creditCardExtras } = useFinance();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+
+  // Group accounts by type
+  const accountsByType = accounts.reduce((acc, account) => {
+    if (!acc[account.type]) {
+      acc[account.type] = [];
+    }
+    acc[account.type].push(account);
+    return acc;
+  }, {} as Record<AccountType, typeof accounts>);
+
+  const getCreditCardInfo = (accountId: string) => {
+    return creditCardExtras.find(cc => cc.accountId === accountId);
+  };
+
+  const renderAccountsByType = (type: AccountType) => {
+    if (!accountsByType[type] || accountsByType[type].length === 0) {
+      return null;
+    }
+
+    return (
+      <div key={type} className="mb-4">
+        <h3 className="text-sm font-medium text-gray-500 mb-2">{type}s</h3>
+        <div className="space-y-2">
+          {accountsByType[type].map((account) => {
+            const isCreditCard = account.type === "Credit Card";
+            const ccInfo = isCreditCard ? getCreditCardInfo(account.id) : null;
+            
+            return (
+              <div 
+                key={account.id} 
+                className="flex items-center justify-between p-3 rounded-md"
+                style={{ backgroundColor: `${account.color}15` }}
+              >
+                <div className="flex items-center">
+                  <div 
+                    className="w-3 h-3 rounded-full mr-3" 
+                    style={{ backgroundColor: account.color }} 
+                  />
+                  <span className="font-medium">{account.name}</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <div className="font-medium">
+                    ₹{account.balance.toLocaleString('en-IN')}
+                  </div>
+                  {isCreditCard && ccInfo && (
+                    <div className="text-xs text-gray-500">
+                      {ccInfo.currentOutstanding > ccInfo.creditLimit ? (
+                        <span className="text-red-500">Over Limit!</span>
+                      ) : (
+                        <span>Available: ₹{(ccInfo.creditLimit - ccInfo.currentOutstanding).toLocaleString('en-IN')}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Card>
@@ -23,9 +86,9 @@ const AccountsOverview: React.FC = () => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Add Bank Account</DialogTitle>
+              <DialogTitle>Add Account</DialogTitle>
               <DialogDescription>
-                Add a new bank account to track your finances.
+                Add a new account to track your finances.
               </DialogDescription>
             </DialogHeader>
             <AddBankForm onSuccess={() => setIsDialogOpen(false)} />
@@ -34,7 +97,7 @@ const AccountsOverview: React.FC = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {banks.length === 0 ? (
+          {accounts.length === 0 ? (
             <div className="text-center py-4">
               <p className="text-gray-500">No accounts yet</p>
               <Button 
@@ -46,24 +109,12 @@ const AccountsOverview: React.FC = () => {
               </Button>
             </div>
           ) : (
-            banks.map((bank) => (
-              <div 
-                key={bank.id} 
-                className="flex items-center justify-between p-3 rounded-md"
-                style={{ backgroundColor: `${bank.color}15` }}
-              >
-                <div className="flex items-center">
-                  <div 
-                    className="w-3 h-3 rounded-full mr-3" 
-                    style={{ backgroundColor: bank.color }} 
-                  />
-                  <span>{bank.name}</span>
-                </div>
-                <div className="font-medium">
-                  {bank.currency} {bank.balance.toFixed(2)}
-                </div>
-              </div>
-            ))
+            <>
+              {renderAccountsByType("Bank")}
+              {renderAccountsByType("Wallet")}
+              {renderAccountsByType("Cash")}
+              {renderAccountsByType("Credit Card")}
+            </>
           )}
         </div>
       </CardContent>

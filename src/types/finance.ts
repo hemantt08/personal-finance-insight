@@ -1,19 +1,55 @@
 
-export interface Bank {
+export interface User {
   id: string;
   name: string;
+  email: string;
+  baseCurrency: string;
+}
+
+export interface Account {
+  id: string;
+  userId: string;
+  name: string;
+  type: AccountType;
   balance: number;
-  currency: string;
+  openingBalance: number;
   color: string;
+}
+
+export type AccountType = "Bank" | "Wallet" | "Credit Card" | "Cash";
+
+export interface CreditCardExtra {
+  accountId: string;
+  creditLimit: number;
+  currentOutstanding: number;
 }
 
 export interface Person {
   id: string;
+  userId: string;
   name: string;
+  runningBalance: number;
 }
 
+export interface Asset {
+  id: string;
+  userId: string;
+  name: string;
+  category: AssetCategory;
+  amountInvested: number;
+  currentValue?: number;
+}
+
+export type AssetCategory = 
+  | "Stocks" 
+  | "Mutual Funds" 
+  | "Cryptocurrency" 
+  | "Property" 
+  | "Gold" 
+  | "Fixed Deposit" 
+  | "Other";
+
 export type TransactionCategory = 
-  | "Personal" 
   | "Food" 
   | "Transportation" 
   | "Utilities" 
@@ -24,51 +60,36 @@ export type TransactionCategory =
   | "Education" 
   | "Gift" 
   | "Investment" 
+  | "Salary"
+  | "Business"
+  | "Interest"
+  | "Rent"
   | "Other";
 
-export type TransactionType = "Income" | "Expense" | "Transfer";
+export type TransactionMainType = "Income" | "Expense" | "Transfer" | "Investment" | "Credit Card Payment";
+
+export type TransactionSubType = "Internal Transfer" | "Debt" | "Repayment" | "Buy" | "Sell" | "";
 
 export interface Transaction {
   id: string;
-  amount: number;
-  type: TransactionType;
+  userId: string;
   date: string;
-  bankId: string;
+  amount: number;
+  accountId: string;
   category: TransactionCategory;
   description: string;
-  payerPayee: string;
-}
-
-export interface Receivable {
-  id: string;
-  personId: string;
-  amount: number;
-  description: string;
-  date: string;
-  isPaid: boolean;
-}
-
-export interface Liability {
-  id: string;
-  personId: string;
-  amount: number;
-  description: string;
-  date: string;
-  isPaid: boolean;
-}
-
-export interface Investment {
-  id: string;
-  name: string;
-  amount: number;
-  currentValue: number;
-  category: string;
+  mainType: TransactionMainType;
+  subType: TransactionSubType;
+  linkedPersonId?: string;
+  linkedAssetId?: string;
 }
 
 export interface NetWorthData {
   assets: number;
   liabilities: number;
   netWorth: number;
+  receivables: number;
+  payables: number;
 }
 
 export interface MonthlyData {

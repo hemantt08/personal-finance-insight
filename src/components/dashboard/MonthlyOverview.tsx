@@ -11,11 +11,12 @@ const MonthlyOverview: React.FC = () => {
   // Generate data for monthly overview
   const monthlyData = Array.from({ length: 12 }, (_, i) => {
     const month = `${selectedYear}-${String(i + 1).padStart(2, '0')}`;
-    const { income, expense } = calculateMonthlyData(month);
+    const { income, expense, balance } = calculateMonthlyData(month);
     return {
       name: new Date(selectedYear, i).toLocaleDateString('en-US', { month: 'short' }),
       income,
-      expense
+      expense,
+      savings: balance
     };
   });
   
@@ -37,20 +38,24 @@ const MonthlyOverview: React.FC = () => {
         <FinanceChart
           data={monthlyData}
           type="bar"
-          barKeys={['income', 'expense']}
+          barKeys={['income', 'expense', 'savings']}
           xAxisKey="name"
-          colors={['#4ade80', '#f87171']}
+          colors={['#4C8BF5', '#f87171', '#10B981']}
           height={250}
-          valueFormatter={(value) => `₹${value.toFixed(2)}`}
+          valueFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
         />
         <div className="flex justify-center mt-4 space-x-6">
           <div className="flex items-center">
-            <div className="w-3 h-3 bg-[#4ade80] rounded-full mr-2" />
+            <div className="w-3 h-3 bg-[#4C8BF5] rounded-full mr-2" />
             <span className="text-sm text-gray-600">Income</span>
           </div>
           <div className="flex items-center">
             <div className="w-3 h-3 bg-[#f87171] rounded-full mr-2" />
             <span className="text-sm text-gray-600">Expense</span>
+          </div>
+          <div className="flex items-center">
+            <div className="w-3 h-3 bg-[#10B981] rounded-full mr-2" />
+            <span className="text-sm text-gray-600">Savings</span>
           </div>
         </div>
       </CardContent>
